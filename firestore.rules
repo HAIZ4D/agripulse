@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Buyers — created by Telegram bot (server-side), readable by web
+    match /buyers/{userId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Farmers — created by web app onboarding
+    match /farmers/{farmerId} {
+      allow read, write: if true;
+    }
+
+    // Demand aggregates — written by Cloud Functions, read by web
+    match /demand_aggregates/{areaName}/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Satellite reports — written by Cloud Functions, read by web
+    match /satellite_reports/{farmerId}/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // AI recommendations — written by Cloud Functions, read by web
+    match /ai_recommendations/{farmerId}/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Surplus alerts — written by web app, read/updated by Cloud Functions
+    match /surplus_alerts/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

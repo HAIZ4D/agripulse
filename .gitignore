@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Environment variables (API keys, secrets)
+.env
+.env.local
+.env.production
+.env.development
+bot/.env
+web/.env
+functions/.env
+
+# Logs
+*.log
+bot/bot.log
+
+# Build output
+web/dist/
+web/build/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Firebase Admin SDK / service account keys
+*-firebase-adminsdk-*.json
+*-service-account*.json
+serviceAccountKey.json
+
+# Firestore data dumps
+functions/dump.json
+functions/clean.json
+
+# Sensitive project files
+AgriPulse_Spec.pdf
+CLAUDE.md
+
+# Lovable folder
+lovable/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code
+.claude/

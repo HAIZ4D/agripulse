@@ -1,0 +1,46 @@
+{
+  "welcome": "Welcome to AgriPulse! I'll help you connect with local farmers.\n\nLet's get started by setting up your profile.",
+  "selectRole": "Please select your role:",
+  "roleSelected": "Role selected: {role}. Thank you!",
+  "shareLocation": "Please share your location so we can match you with nearby farmers.\n\nYou can:\n1. Press the 📎 > Location button to share GPS\n2. Or type your area name (e.g. \"Shah Alam\")",
+  "locationSaved": "Location saved: {area}.",
+  "enterDemand": "Now, please enter your demands one by one.\n\nFormat: <crop name> <quantity>\nExample: Kangkung 50kg\n\nType /done when finished.",
+  "demandAdded": "Added: {crop} — {quantity}\n\nContinue adding or type /done to finish.",
+  "demandAddedError": "Sorry, I couldn't understand that demand. Please use the format: Kangkung 50kg",
+  "noDemands": "You haven't entered any demands yet. Please enter at least one demand before finishing.",
+  "selectFrequency": "How often do you need this supply?",
+  "frequencyWeekly": "Weekly",
+  "frequencyBiweekly": "Biweekly",
+  "frequencyMonthly": "Monthly",
+  "profileSaved": "Your profile has been saved! We'll match you with nearby farmers.\n\nUse /status to view your profile.\nUse /update to modify your demands.\nUse /surplus to notify surplus availability.",
+  "statusReport": "📋 *Your Profile*\n\nRole: {role}\nArea: {area}\nFrequency: {frequency}\n\n*Demands:*\n{demands}\n\nLanguage: {language}",
+  "statusNoDemands": "No demands registered.",
+  "noProfile": "You don't have a profile yet. Please use /start to register.",
+  "surplusPrompt": "Please enter your surplus produce.\n\nFormat: <crop name> <quantity>\nExample: Kangkung 100kg",
+  "surplusNotify": "🔔 *Surplus Notification!*\n\nA farmer in {area} has surplus:\n{crop} — {quantity}\n\nContact them for fresh supply!",
+  "surplusPosted": "Your surplus has been notified to {count} buyers in {area}.",
+  "surplusNoBuyers": "No buyers found in your area who need {crop} at this time.",
+  "langChanged": "Language changed to English.",
+  "langPrompt": "Sila pilih bahasa / Please select language / 请选择语言:",
+  "updatePrompt": "Please enter your new demands one by one.\nFormat: Kangkung 50kg\n\nOld demands will be replaced.\nType /done when finished.",
+  "updateSaved": "Your demands have been updated!",
+  "errors": {
+    "general": "Sorry, an error occurred. Please try again.",
+    "invalidFormat": "Invalid format. Please use the format: Kangkung 50kg",
+    "locationFailed": "Sorry, couldn't identify your location. Please try again.",
+    "alreadyRegistered": "You are already registered. Use /update to modify demands or /status to view your profile."
+  },
+  "roles": {
+    "restaurant": "Restaurant",
+    "home_cook": "Home Cook",
+    "retailer": "Retailer"
+  },
+  "frequencies": {
+    "weekly": "Weekly",
+    "biweekly": "Biweekly",
+    "monthly": "Monthly"
+  },
+  "weatherForecast": "🌤 *Weather Forecast for {area}*\n\n{forecast}",
+  "weatherWarning": "⚠️ *Weather Warning*\n\n{warning}",
+  "noWeatherData": "No weather data available for this area."
+}

@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+@import "./demand-intel.css";
+@import "./farm-monitor.css";
+
+@theme {
+  /* GLOBAL DARK GREEN SCIFI THEME (Derived from DemandIntel/Lovable) */
+  --color-background: hsl(152, 35%, 6%);
+  --color-foreground: hsl(145, 20%, 92%);
+  --color-card: hsl(152, 30%, 10%);
+  --color-card-foreground: hsl(145, 20%, 92%);
+  --color-primary: hsl(152, 60%, 42%);
+  --color-primary-foreground: hsl(152, 40%, 4%);
+  --color-secondary: hsl(46, 70%, 52%);
+  --color-secondary-foreground: hsl(46, 80%, 10%);
+  --color-muted: hsl(152, 20%, 14%);
+  --color-muted-foreground: hsl(150, 12%, 50%);
+  --color-accent: hsl(152, 35%, 16%);
+  --color-accent-foreground: hsl(152, 55%, 72%);
+  --color-destructive: hsl(0, 65%, 45%);
+  --color-destructive-foreground: hsl(0, 0%, 100%);
+  --color-border: hsl(152, 20%, 16%);
+  --color-input: hsl(152, 20%, 16%);
+  --color-ring: hsl(152, 60%, 42%);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  background: linear-gradient(180deg, hsl(152 35% 8%) 0%, hsl(152 35% 5%) 100%);
+  min-height: 100svh;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+/* Original animations used by other pages */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+/* =====================================================
+   DASHBOARD-ONLY DARK GREEN THEME
+   Scoped under .dashboard-theme — does NOT affect
+   any other page.
+   ===================================================== */
+
+.dashboard-theme {
+  /* Override CSS variables only inside the dashboard */
+  --color-background: hsl(155, 25%, 6%);
+  --color-foreground: hsl(150, 15%, 92%);
+  --color-card: hsl(155, 22%, 10%);
+  --color-card-foreground: hsl(150, 15%, 92%);
+  --color-primary: hsl(160, 84%, 39%);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: hsl(155, 18%, 14%);
+  --color-secondary-foreground: hsl(150, 15%, 80%);
+  --color-muted: hsl(155, 16%, 14%);
+  --color-muted-foreground: hsl(155, 10%, 50%);
+  --color-accent: hsl(160, 35%, 13%);
+  --color-accent-foreground: hsl(160, 84%, 60%);
+  --color-destructive: hsl(0, 72%, 50%);
+  --color-destructive-foreground: #ffffff;
+  --color-border: hsl(155, 14%, 14%);
+
+  /* Custom gradient/shadow tokens */
+  --gradient-primary: linear-gradient(135deg, hsl(160, 84%, 39%), hsl(174, 72%, 40%));
+  --gradient-card: linear-gradient(145deg, hsl(155, 22%, 12%), hsl(155, 22%, 9%));
+  --glow-primary: 0 0 30px -5px hsla(160, 84%, 39%, 0.35);
+  --shadow-card: 0 2px 8px 0 rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(16, 185, 129, 0.04);
+  --shadow-card-hover: 0 12px 32px -8px rgba(16, 185, 129, 0.2), 0 0 0 1px rgba(16, 185, 129, 0.12);
+
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  min-height: 100svh;
+}
+
+/* Lovable component classes — scoped to dashboard only */
+.dashboard-theme .dashboard-card {
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease-out;
+  border: 0;
+  background: var(--gradient-card);
+  box-shadow: var(--shadow-card);
+}
+
+.dashboard-theme .dashboard-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.dashboard-theme .stat-card {
+  border-radius: 1rem;
+  padding: 1.25rem;
+  transition: all 0.3s ease-out;
+  cursor: default;
+  border: 0;
+  background: var(--gradient-card);
+  box-shadow: var(--shadow-card);
+}
+
+.dashboard-theme .stat-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-3px) scale(1.01);
+}
+
+.dashboard-theme .gradient-icon {
+  background: var(--gradient-primary);
+}
+
+.dashboard-theme .gradient-text {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dashboard-theme .badge-healthy {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: hsla(160, 84%, 39%, 0.15);
+  color: hsl(160, 84%, 55%);
+}
+
+.dashboard-theme .badge-warning {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: hsla(45, 93%, 50%, 0.15);
+  color: hsl(45, 93%, 60%);
+}
+
+.dashboard-theme .badge-critical {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: hsla(0, 72%, 50%, 0.15);
+  color: hsl(0, 72%, 60%);
+}
+
+.dashboard-theme .glass-surface {
+  background: rgba(16, 185, 129, 0.04);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(16, 185, 129, 0.06);
+}
+
+.dashboard-theme .glow-ring {
+  box-shadow: var(--glow-primary);
+}
+
+/* Dashboard animations */
+@keyframes dashFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dashSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dashboard-theme .animate-fade-in {
+  animation: dashFadeIn 0.5s ease-out forwards;
+}
+
+.dashboard-theme .animate-slide-up {
+  animation: dashSlideUp 0.5s ease-out forwards;
+}

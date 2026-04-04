@@ -1,0 +1,46 @@
+{
+  "welcome": "Selamat datang ke AgriPulse! Saya akan membantu anda menghubungkan dengan petani tempatan.\n\nMari mulakan dengan menyediakan profil anda.",
+  "selectRole": "Sila pilih peranan anda:",
+  "roleSelected": "Peranan dipilih: {role}. Terima kasih!",
+  "shareLocation": "Sila kongsikan lokasi anda supaya kami boleh memadankan anda dengan petani berdekatan.\n\nAnda boleh:\n1. Tekan butang 📎 > Lokasi untuk berkongsi GPS\n2. Atau taip nama kawasan anda (contoh: \"Shah Alam\")",
+  "locationSaved": "Lokasi disimpan: {area}.",
+  "enterDemand": "Sekarang, sila masukkan permintaan anda satu persatu.\n\nFormat: <nama sayur> <kuantiti>\nContoh: Kangkung 50kg\n\nTaip /done apabila selesai.",
+  "demandAdded": "Ditambah: {crop} — {quantity}\n\nTeruskan menambah atau taip /done untuk selesai.",
+  "demandAddedError": "Maaf, saya tidak dapat memahami permintaan tersebut. Sila gunakan format: Kangkung 50kg",
+  "noDemands": "Anda belum memasukkan sebarang permintaan. Sila masukkan sekurang-kurangnya satu permintaan sebelum menamatkan.",
+  "selectFrequency": "Berapa kerap anda memerlukan bekalan ini?",
+  "frequencyWeekly": "Mingguan",
+  "frequencyBiweekly": "Dua Minggu Sekali",
+  "frequencyMonthly": "Bulanan",
+  "profileSaved": "Profil anda telah disimpan! Kami akan memadankan anda dengan petani berdekatan.\n\nGunakan /status untuk melihat profil anda.\nGunakan /update untuk mengemas kini permintaan.\nGunakan /surplus untuk memberitahu lebihan hasil.",
+  "statusReport": "📋 *Profil Anda*\n\nPeranan: {role}\nKawasan: {area}\nKekerapan: {frequency}\n\n*Permintaan:*\n{demands}\n\nBahasa: {language}",
+  "statusNoDemands": "Tiada permintaan didaftarkan.",
+  "noProfile": "Anda belum mempunyai profil. Sila gunakan /start untuk mendaftar.",
+  "surplusPrompt": "Sila masukkan lebihan hasil anda.\n\nFormat: <nama sayur> <kuantiti>\nContoh: Kangkung 100kg",
+  "surplusNotify": "🔔 *Pemberitahuan Lebihan!*\n\nPetani di kawasan {area} mempunyai lebihan:\n{crop} — {quantity}\n\nHubungi mereka untuk mendapatkan bekalan segar!",
+  "surplusPosted": "Lebihan anda telah diberitahu kepada {count} pembeli di kawasan {area}.",
+  "surplusNoBuyers": "Tiada pembeli ditemui di kawasan anda yang memerlukan {crop} pada masa ini.",
+  "langChanged": "Bahasa telah ditukar ke Bahasa Melayu.",
+  "langPrompt": "Sila pilih bahasa / Please select language / 请选择语言:",
+  "updatePrompt": "Sila masukkan permintaan baharu anda satu persatu.\nFormat: Kangkung 50kg\n\nPermintaan lama akan digantikan.\nTaip /done apabila selesai.",
+  "updateSaved": "Permintaan anda telah dikemas kini!",
+  "errors": {
+    "general": "Maaf, berlaku ralat. Sila cuba lagi.",
+    "invalidFormat": "Format tidak sah. Sila gunakan format: Kangkung 50kg",
+    "locationFailed": "Maaf, tidak dapat mengenal pasti lokasi anda. Sila cuba lagi.",
+    "alreadyRegistered": "Anda sudah berdaftar. Gunakan /update untuk mengemas kini permintaan atau /status untuk melihat profil."
+  },
+  "roles": {
+    "restaurant": "Restoran",
+    "home_cook": "Tukang Masak Rumah",
+    "retailer": "Peruncit"
+  },
+  "frequencies": {
+    "weekly": "Mingguan",
+    "biweekly": "Dua Minggu Sekali",
+    "monthly": "Bulanan"
+  },
+  "weatherForecast": "🌤 *Ramalan Cuaca untuk {area}*\n\n{forecast}",
+  "weatherWarning": "⚠️ *Amaran Cuaca*\n\n{warning}",
+  "noWeatherData": "Tiada data cuaca tersedia untuk kawasan ini."
+}

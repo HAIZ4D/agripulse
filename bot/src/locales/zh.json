@@ -1,0 +1,46 @@
+{
+  "welcome": "欢迎使用 AgriPulse！我将帮助您与当地农民联系。\n\n让我们开始设置您的个人资料。",
+  "selectRole": "请选择您的角色：",
+  "roleSelected": "已选择角色：{role}。谢谢！",
+  "shareLocation": "请分享您的位置，以便我们为您匹配附近的农民。\n\n您可以：\n1. 点击 📎 > 位置按钮分享GPS\n2. 或输入您的地区名称（例如：\"Shah Alam\"）",
+  "locationSaved": "位置已保存：{area}。",
+  "enterDemand": "现在，请逐一输入您的需求。\n\n格式：<蔬菜名称> <数量>\n例如：Kangkung 50kg\n\n输入完成后请输入 /done。",
+  "demandAdded": "已添加：{crop} — {quantity}\n\n继续添加或输入 /done 完成。",
+  "demandAddedError": "抱歉，我无法理解该需求。请使用格式：Kangkung 50kg",
+  "noDemands": "您尚未输入任何需求。请在完成前至少输入一项需求。",
+  "selectFrequency": "您需要多久供应一次？",
+  "frequencyWeekly": "每周",
+  "frequencyBiweekly": "每两周",
+  "frequencyMonthly": "每月",
+  "profileSaved": "您的个人资料已保存！我们将为您匹配附近的农民。\n\n使用 /status 查看您的资料。\n使用 /update 修改您的需求。\n使用 /surplus 通知剩余农产品。",
+  "statusReport": "📋 *您的个人资料*\n\n角色：{role}\n地区：{area}\n频率：{frequency}\n\n*需求：*\n{demands}\n\n语言：{language}",
+  "statusNoDemands": "未注册任何需求。",
+  "noProfile": "您还没有个人资料。请使用 /start 注册。",
+  "surplusPrompt": "请输入您的剩余农产品。\n\n格式：<蔬菜名称> <数量>\n例如：Kangkung 100kg",
+  "surplusNotify": "🔔 *剩余通知！*\n\n{area} 的农民有剩余：\n{crop} — {quantity}\n\n联系他们获取新鲜供应！",
+  "surplusPosted": "您的剩余已通知 {area} 的 {count} 位买家。",
+  "surplusNoBuyers": "目前在您的地区没有找到需要 {crop} 的买家。",
+  "langChanged": "语言已更改为中文。",
+  "langPrompt": "Sila pilih bahasa / Please select language / 请选择语言：",
+  "updatePrompt": "请逐一输入您的新需求。\n格式：Kangkung 50kg\n\n旧需求将被替换。\n输入完成后请输入 /done。",
+  "updateSaved": "您的需求已更新！",
+  "errors": {
+    "general": "抱歉，发生了错误。请重试。",
+    "invalidFormat": "格式无效。请使用格式：Kangkung 50kg",
+    "locationFailed": "抱歉，无法识别您的位置。请重试。",
+    "alreadyRegistered": "您已经注册。使用 /update 修改需求或使用 /status 查看资料。"
+  },
+  "roles": {
+    "restaurant": "餐厅",
+    "home_cook": "家庭厨师",
+    "retailer": "零售商"
+  },
+  "frequencies": {
+    "weekly": "每周",
+    "biweekly": "每两周",
+    "monthly": "每月"
+  },
+  "weatherForecast": "🌤 *{area} 天气预报*\n\n{forecast}",
+  "weatherWarning": "⚠️ *天气警报*\n\n{warning}",
+  "noWeatherData": "该地区暂无天气数据。"
+}
