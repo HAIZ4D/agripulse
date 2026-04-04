@@ -6,8 +6,16 @@ let db;
 function initFirestore() {
   if (!db) {
     const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
     let app;
-    if (serviceAccountPath) {
+    if (serviceAccountJson) {
+      // Render / cloud: service account passed as JSON string env var
+      const serviceAccount = JSON.parse(serviceAccountJson);
+      app = initializeApp({
+        credential: cert(serviceAccount),
+        projectId: process.env.FIREBASE_PROJECT_ID,
+      });
+    } else if (serviceAccountPath) {
       const serviceAccount = require(require('path').resolve(serviceAccountPath));
       app = initializeApp({
         credential: cert(serviceAccount),
