@@ -69,6 +69,57 @@ AgriPulse is a two-sided agricultural intelligence platform that connects local 
 
 ---
 
+## Future Roadmap
+
+AgriPulse is designed to evolve into a fully integrated, AI-powered smart agriculture ecosystem. Our roadmap focuses on scalability, real-world adoption, and continuous improvement based on user feedback.
+
+Phase 1: Nationwide Deployment (Short-Term)
+-Expand AgriPulse across all states in Malaysia
+-Target smallholder farmers with smartphone-first access
+-Improve onboarding experience (simpler farm registration & UI)
+-Support more crops and localized demand datasets
+-Optimize Telegram bot for faster and more structured demand input
+
+Phase 2: Smart Supply Chain Integration (Mid-Term)
+-Integrate with logistics partners (e.g., Lalamove, Grab)
+-Enable automated farm-to-buyer delivery coordination
+-Introduce real-time pricing and supply matching
+-Add auto-reorder system based on buyer feedback
+-Build marketplace features for direct farmer–buyer transactions
+
+Phase 3: Government & Data Ecosystem (Long-Term)
+-Integrate with government agencies (e.g., FAMA, MAFI)
+-Share anonymized agricultural data for policy planning
+-Support national food security monitoring systems
+-Enable large-scale agricultural analytics and forecasting
+-Contribute to data-driven decision-making at national level
+
+AI & System Enhancements
+-Improve AI accuracy with more real-time and historical data
+-Add predictive pest and disease detection
+-Enhance explainable AI (clear reasoning for recommendations)
+-Introduce personalized AI recommendations per farm
+-Continuous learning from user behavior and feedback
+
+User Experience Improvements
+-Multi-language support expansion (BM, EN, others)
+-SMS/WhatsApp alerts for low connectivity users
+-Offline mode for rural farmers
+-Simpler UI for non-technical users
+-Voice input for demand submission
+
+## Long-Term Vision
+
+AgriPulse aims to become a regional smart agriculture platform, connecting farmers, buyers, and policymakers through real-time data and AI — reducing food waste, improving farmer income, and strengthening food security.
+
+## Continuous Improvement
+
+We actively incorporate feedback from real users:
+-Simplifying workflows for farmers
+-Automating repetitive tasks (e.g., demand input)
+-Improving clarity of AI insights
+-Enhancing accessibility for all user groups
+
 ## Project Structure
 
 ```
@@ -211,12 +262,6 @@ GOOGLE_APPLICATION_CREDENTIALS=./your-service-account.json
             │   Engine     │ │   API    │
             └──────────────┘ └──────────┘
 ```
-
----
-
-## Team
-
-Built for the Hackathon — addressing Malaysian food security through AI-powered agricultural intelligence.
 
 ---
 
