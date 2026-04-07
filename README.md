@@ -6,7 +6,7 @@ AgriPulse is a two-sided agricultural intelligence platform that connects local 
 
 ---
 
-## Links
+## Linkss
 
 | Resource | URL |
 |----------|-----|
