@@ -1,35 +1,99 @@
 import { useTranslation } from 'react-i18next'
 import { GoogleMap, Polygon } from '@react-google-maps/api'
-import { Satellite, Loader2, Maximize2 } from 'lucide-react'
+import { Satellite, Loader2, Maximize2, Leaf, Droplets, FlaskConical } from 'lucide-react'
 import { useState } from 'react'
 import { useGoogleMaps } from '../lib/mapsLoader'
 
 const mapContainerStyle = { width: '100%', height: '100%', minHeight: '400px', flex: 1, borderRadius: '0 0 0.75rem 0.75rem' }
 const mapContainerStyleExpanded = { width: '100%', height: '80vh', borderRadius: '0 0 0.75rem 0.75rem' }
 
-function ndviToColor(ndvi) {
-  if (ndvi >= 0.6) return { fill: '#15803d', label: 'healthy' }
-  if (ndvi >= 0.4) return { fill: '#22c55e', label: 'healthy' }
-  if (ndvi >= 0.3) return { fill: '#a3e635', label: 'moderate' }
-  if (ndvi >= 0.2) return { fill: '#facc15', label: 'stressed' }
-  if (ndvi >= 0.1) return { fill: '#f97316', label: 'stressed' }
+// ─── Index configuration ──────────────────────────────────────────────────────
+const INDICES = [
+  { key: 'ndvi', label: 'NDVI', Icon: Leaf,        title: 'Vegetation Health' },
+  { key: 'ndwi', label: 'NDWI', Icon: Droplets,    title: 'Water Stress' },
+  { key: 'ndre', label: 'NDRE', Icon: FlaskConical, title: 'Early N-Stress' },
+]
+
+// ─── Color scales per index ───────────────────────────────────────────────────
+function ndviToColor(value) {
+  if (value >= 0.55) return { fill: '#15803d', label: 'healthy' }
+  if (value >= 0.40) return { fill: '#22c55e', label: 'healthy' }
+  if (value >= 0.28) return { fill: '#a3e635', label: 'moderate' }
+  if (value >= 0.18) return { fill: '#facc15', label: 'stressed' }
+  if (value >= 0.08) return { fill: '#f97316', label: 'stressed' }
   return { fill: '#ef4444', label: 'critical' }
 }
 
-function getStatusLabel(ndvi, t) {
-  if (ndvi == null) return '—'
-  if (ndvi >= 0.6) return t('farmMonitor.healthy')
-  if (ndvi >= 0.4) return t('farmMonitor.healthy')
-  if (ndvi >= 0.3) return t('farmMonitor.moderate')
-  if (ndvi >= 0.2) return t('farmMonitor.stressed')
-  return t('farmMonitor.critical')
+function ndwiToColor(value) {
+  // NDWI: higher = more water (good in moderation); very negative = dry
+  if (value > 0.20)  return { fill: '#1d4ed8', label: 'wet/flood' }
+  if (value > 0.00)  return { fill: '#3b82f6', label: 'moist' }
+  if (value > -0.15) return { fill: '#22c55e', label: 'adequate' }
+  if (value > -0.25) return { fill: '#facc15', label: 'dry' }
+  if (value > -0.35) return { fill: '#f97316', label: 'stressed' }
+  return { fill: '#ef4444', label: 'drought' }
 }
 
-export default function NDVIOverlay({ boundary, ndviAverage, ndviZones }) {
+function ndreToColor(value) {
+  // NDRE: higher = better nitrogen / chlorophyll
+  if (value >= 0.40) return { fill: '#15803d', label: 'excellent N' }
+  if (value >= 0.30) return { fill: '#22c55e', label: 'good N' }
+  if (value >= 0.22) return { fill: '#facc15', label: 'low N' }
+  if (value >= 0.15) return { fill: '#f97316', label: 'N stress' }
+  return { fill: '#ef4444', label: 'N deficit' }
+}
+
+const COLOR_FNS = { ndvi: ndviToColor, ndwi: ndwiToColor, ndre: ndreToColor }
+
+const LEGENDS = {
+  ndvi: [
+    { color: '#15803d', label: 'Healthy',  range: '≥0.55' },
+    { color: '#22c55e', label: '',          range: '0.40-0.55' },
+    { color: '#a3e635', label: 'Moderate',  range: '0.28-0.40' },
+    { color: '#facc15', label: 'Stressed',  range: '0.18-0.28' },
+    { color: '#ef4444', label: 'Critical',  range: '<0.18' },
+  ],
+  ndwi: [
+    { color: '#1d4ed8', label: 'Wet/Flood', range: '>0.20' },
+    { color: '#3b82f6', label: 'Moist',      range: '0-0.20' },
+    { color: '#22c55e', label: 'Adequate',   range: '-0.15-0' },
+    { color: '#facc15', label: 'Dry',        range: '-0.25 to -0.15' },
+    { color: '#ef4444', label: 'Drought',    range: '<-0.25' },
+  ],
+  ndre: [
+    { color: '#15803d', label: 'Excellent N', range: '≥0.40' },
+    { color: '#22c55e', label: 'Good N',      range: '0.30-0.40' },
+    { color: '#facc15', label: 'Low N',       range: '0.22-0.30' },
+    { color: '#f97316', label: 'N Stress',    range: '0.15-0.22' },
+    { color: '#ef4444', label: 'N Deficit',   range: '<0.15' },
+  ],
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function getFarmColor(activeIndex, report) {
+  const fn = COLOR_FNS[activeIndex]
+  const value = report?.[`${activeIndex}_average`] ?? null
+  if (value === null) return { fill: '#4ade80', label: 'pending' }
+  return fn(value)
+}
+
+function getDisplayValue(activeIndex, report) {
+  return report?.[`${activeIndex}_average`] ?? null
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+export default function NDVIOverlay({ boundary, report }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
-
+  const [activeIndex, setActiveIndex] = useState('ndvi')
+  const [hoveredZone, setHoveredZone] = useState(null)
   const { isLoaded } = useGoogleMaps()
+
+  const zones = report?.zones || []
+  const displayValue = getDisplayValue(activeIndex, report)
+  const hasData = displayValue !== null
+  const farmColor = getFarmColor(activeIndex, report)
+  const colorFn = COLOR_FNS[activeIndex]
 
   if (!isLoaded) {
     return (
@@ -53,47 +117,98 @@ export default function NDVIOverlay({ boundary, ndviAverage, ndviZones }) {
     lng: boundary.coordinates[0].reduce((s, c) => s + c[0], 0) / boundary.coordinates[0].length,
   }
 
-  const color = ndviToColor(ndviAverage ?? 0)
-  const statusLabel = getStatusLabel(ndviAverage, t)
-
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden animate-fade-in-up h-full flex flex-col">
       {/* Header */}
-      {/* Header */}
-      <div className="p-4 border-b border-border bg-black/40 backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
+      <div className="p-4 border-b border-border bg-black/40 backdrop-blur-md flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="glass-strong rounded-xl px-4 py-2 flex items-center gap-2">
+          <div className="glass-strong rounded-xl px-3 py-1.5 flex items-center gap-2">
             <Satellite className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">NDVI Live Satellite</span>
+            <span className="text-sm font-semibold text-foreground">{t('farmMonitor.satelliteView')}</span>
           </div>
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wider bg-primary/20 text-primary`}>
-            <span className={`relative w-2 h-2 rounded-full bg-primary`}>
-              <span className={`absolute inset-0 rounded-full bg-primary animate-ping opacity-75`} />
-            </span>
-            LIVE
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          {ndviAverage != null && (
-            <div className="flex items-center gap-2 mx-2">
-              <div className="w-3 h-3 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)]" style={{ backgroundColor: color.fill }} />
-              <span className="text-sm font-bold" style={{ color: color.fill }}>
-                NDVI: {ndviAverage.toFixed(3)}
+          {hasData ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wider bg-primary/20 text-primary">
+              <span className="relative w-2 h-2 rounded-full bg-primary">
+                <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-75" />
               </span>
-              <span className="text-xs px-2.5 py-1 rounded-lg font-bold tracking-wide" style={{ backgroundColor: color.fill + '20', color: color.fill }}>
-                {statusLabel}
+              LIVE
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wider bg-amber-500/15 text-amber-400">
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              {t('farmMonitor.pendingScan')}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Index Selector */}
+          <div className="flex bg-muted/30 border border-border/60 rounded-lg overflow-hidden">
+            {INDICES.map((idx) => {
+              const IdxIcon = idx.Icon
+              const isActive = activeIndex === idx.key
+              return (
+                <button
+                  key={idx.key}
+                  onClick={() => setActiveIndex(idx.key)}
+                  title={idx.title}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                  }`}
+                >
+                  <IdxIcon className="w-3 h-3" />
+                  {idx.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Current value display */}
+          {hasData && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/30 rounded-lg border border-border">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: farmColor.fill }} />
+              <span className="text-xs font-bold" style={{ color: farmColor.fill }}>
+                {activeIndex.toUpperCase()}: {displayValue.toFixed(3)}
               </span>
             </div>
           )}
+
+          {/* Expand button */}
           <button
             onClick={() => setExpanded(!expanded)}
             className="p-2 bg-black/30 hover:bg-white/10 rounded-lg transition-colors border border-border"
-            title={expanded ? 'Collapse' : 'Expand'}
           >
             <Maximize2 className="w-4 h-4 text-primary" />
           </button>
         </div>
       </div>
+
+      {/* Pending data banner */}
+      {!hasData && (
+        <div className="px-4 py-2.5 bg-amber-500/5 border-b border-amber-500/10 flex items-center gap-2">
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+          <span className="text-xs text-amber-400 font-medium">{t('farmMonitor.waitingSatelliteData')}</span>
+        </div>
+      )}
+
+      {/* Zone stats bar */}
+      {zones.length > 0 && (
+        <div className="px-4 py-2 bg-muted/10 border-b border-border/30 flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground">{zones.length} zones</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" />{zones.filter(z => z.classification === 'healthy').length} healthy</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />{zones.filter(z => z.classification === 'moderate').length} moderate</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" />{zones.filter(z => z.classification === 'critical').length} critical</span>
+          {hoveredZone && (
+            <span className="ml-auto font-mono bg-black/30 px-2 py-0.5 rounded">
+              {hoveredZone.zone_id}: {hoveredZone[activeIndex] !== null && hoveredZone[activeIndex] !== undefined
+                ? hoveredZone[activeIndex].toFixed(3) : '—'}
+              {' '}<span className="capitalize">({hoveredZone.classification})</span>
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Map */}
       <div className="flex-1 w-full relative min-h-0">
@@ -107,57 +222,64 @@ export default function NDVIOverlay({ boundary, ndviAverage, ndviZones }) {
             mapTypeControl: true,
             fullscreenControl: true,
             zoomControl: true,
-            mapTypeControlOptions: {
-              position: 3, // TOP_RIGHT
-            },
+            mapTypeControlOptions: { position: 3 },
           }}
         >
-        {/* Main farm polygon */}
-        <Polygon
-          paths={boundary.coordinates[0].map(([lng, lat]) => ({ lat, lng }))}
-          options={{
-            fillColor: color.fill,
-            fillOpacity: 0.4,
-            strokeColor: '#ffffff',
-            strokeWeight: 2.5,
-            strokeOpacity: 0.9,
-          }}
-        />
+          {/* Farm boundary — outer outline only (no fill, zones handle it) */}
+          <Polygon
+            paths={boundary.coordinates[0].map(([lng, lat]) => ({ lat, lng }))}
+            options={{
+              fillColor: zones.length > 0 ? 'transparent' : (hasData ? farmColor.fill : '#4ade80'),
+              fillOpacity: zones.length > 0 ? 0 : (hasData ? 0.35 : 0.08),
+              strokeColor: '#ffffff',
+              strokeWeight: 2.5,
+              strokeOpacity: 0.9,
+            }}
+          />
 
-        {/* Zone-level overlays */}
-        {ndviZones?.map((zone, i) => {
-          const zoneColor = ndviToColor(zone.ndvi)
-          return (
-            <Polygon
-              key={i}
-              paths={zone.coordinates.map(([lng, lat]) => ({ lat, lng }))}
-              options={{
-                fillColor: zoneColor.fill,
-                fillOpacity: 0.55,
-                strokeColor: '#ffffff',
-                strokeWeight: 1,
-                strokeOpacity: 0.7,
-              }}
-            />
-          )
-        })}
-      </GoogleMap>
+          {/* Zone-level polygons — colored by active index */}
+          {zones.map((zone) => {
+            const indexValue = zone[activeIndex]
+            const zoneColor = indexValue !== null && indexValue !== undefined
+              ? colorFn(indexValue)
+              : { fill: '#6b7280' }
+            const isCritical = zone.classification === 'critical'
+
+            // Ensure path format: [[lng,lat],...] → [{lat,lng},...]
+            let coords = zone.coordinates
+            if (coords && Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
+              coords = coords[0]  // unwrap double-nested ring
+            }
+            if (!coords || !Array.isArray(coords)) return null
+
+            return (
+              <Polygon
+                key={zone.zone_id}
+                paths={coords.map(([lng, lat]) => ({ lat, lng }))}
+                options={{
+                  fillColor: zoneColor.fill,
+                  fillOpacity: isCritical ? 0.65 : 0.50,
+                  strokeColor: isCritical ? '#ff4444' : '#ffffff',
+                  strokeWeight: isCritical ? 2 : 1,
+                  strokeOpacity: isCritical ? 1 : 0.6,
+                  zIndex: isCritical ? 10 : 5,
+                }}
+                onMouseOver={() => setHoveredZone(zone)}
+                onMouseOut={() => setHoveredZone(null)}
+              />
+            )
+          })}
+        </GoogleMap>
       </div>
 
       {/* Legend */}
       <div className="p-3 bg-gradient-to-r from-muted/30 to-muted/60 flex items-center justify-between">
-        <div className="flex items-center gap-4 text-xs">
-          {[
-            { color: '#15803d', label: t('farmMonitor.healthy'), range: '0.6+' },
-            { color: '#22c55e', label: '', range: '0.4-0.6' },
-            { color: '#a3e635', label: t('farmMonitor.moderate'), range: '0.3-0.4' },
-            { color: '#facc15', label: t('farmMonitor.stressed'), range: '0.2-0.3' },
-            { color: '#ef4444', label: t('farmMonitor.critical'), range: '<0.2' },
-          ].map((item) => (
+        <div className="flex items-center gap-3 text-xs flex-wrap">
+          {LEGENDS[activeIndex].map((item) => (
             <div key={item.range} className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }} />
               <span className="text-muted-foreground">
-                {item.label ? `${item.label}` : ''} {item.range}
+                {item.label ? `${item.label} ` : ''}{item.range}
               </span>
             </div>
           ))}

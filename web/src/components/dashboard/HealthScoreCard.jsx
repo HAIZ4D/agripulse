@@ -12,7 +12,7 @@ export default function HealthScoreCard({ score, trend, ndviAvg, farms, waitingM
   const status = getStatus(score);
 
   const getProgressGradient = (s) => {
-    if (s >= 75) return 'bg-gradient-to-r from-emerald-500 to-teal-400';
+    if (s >= 75) return 'bg-gradient-to-r from-green-500 to-green-400';
     if (s >= 50) return 'bg-gradient-to-r from-amber-500 to-orange-400';
     return 'bg-gradient-to-r from-red-500 to-rose-400';
   };
@@ -26,10 +26,10 @@ export default function HealthScoreCard({ score, trend, ndviAvg, farms, waitingM
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
 
   return (
-    <div className="dashboard-card opacity-0 animate-slide-up" style={{ animationDelay: '300ms' }}>
+    <div className="dashboard-card opacity-0 animate-slide-up h-full" style={{ animationDelay: '300ms' }}>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold flex items-center gap-2.5 text-foreground">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center" style={{ boxShadow: '0 0 20px -4px rgba(16,185,129,0.4)' }}>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-green-400 flex items-center justify-center" style={{ boxShadow: '0 0 16px rgba(74,222,128,0.2)' }}>
             <Leaf className="w-5 h-5 text-primary-foreground" />
           </div>
           {t('dashboard.farmHealth')}
@@ -42,7 +42,7 @@ export default function HealthScoreCard({ score, trend, ndviAvg, farms, waitingM
         <span className="text-muted-foreground text-sm mb-2 font-medium">/ 100</span>
         {trend && (
           <div className="flex items-center gap-1 mb-2 ml-auto">
-            <TrendIcon className={`w-4 h-4 ${trend === 'up' ? 'text-emerald-400' : trend === 'down' ? 'text-red-400' : 'text-muted-foreground'}`} />
+            <TrendIcon className={`w-4 h-4 ${trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-muted-foreground'}`} />
             <span className="text-xs text-muted-foreground font-medium">{trend === 'up' ? t('dashboard.improving') : trend === 'down' ? t('dashboard.declining') : t('dashboard.stable')}</span>
           </div>
         )}

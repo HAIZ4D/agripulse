@@ -2,18 +2,23 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, ShoppingCart, Leaf, Activity, Loader2 } from 'lucide-react';
 import { getFarmer, getDemandAggregates, getLatestSatelliteReport } from '../services/firebase';
+import { fetchForecast } from '../services/weatherMY';
 import { getDistrict } from '../lib/utils';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import StatCard from '../components/dashboard/StatCard';
 import HealthScoreCard from '../components/dashboard/HealthScoreCard';
 import WeatherPanel from '../components/dashboard/WeatherPanel';
 import EmptyFarmState from '../components/dashboard/EmptyFarmState';
+import MarketDemandTrend from '../components/dashboard/MarketDemandTrend';
+import RecentAlerts from '../components/dashboard/RecentAlerts';
+import DashboardFooter from '../components/dashboard/DashboardFooter';
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const [farmer, setFarmer] = useState(null);
   const [demands, setDemands] = useState([]);
   const [satellite, setSatellite] = useState(null);
+  const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const farmerId = localStorage.getItem('agripulse-farmerId');
@@ -42,11 +47,17 @@ export default function Dashboard() {
       }
     }
     loadData();
+
+    if (areaName) {
+      fetchForecast(areaName)
+        .then((data) => setWeather(data))
+        .catch((err) => console.error('Weather fetch error:', err));
+    }
   }, [farmerId, areaName]);
 
   if (loading) {
     return (
-      <div className="dashboard-theme flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-2xl gradient-icon flex items-center justify-center animate-pulse">
             <Loader2 className="w-6 h-6 animate-spin text-primary-foreground" />
@@ -64,65 +75,89 @@ export default function Dashboard() {
       ? [...demands].sort((a, b) => (b.total_weekly_kg || 0) - (a.total_weekly_kg || 0))[0]?.crop
       : '—';
 
+  const hasFarm = farmer?.farms && farmer.farms.length > 0;
+
   return (
-    <div className="dashboard-theme">
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
+    <div>
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Header: Greeting + Badges */}
         <DashboardHeader farmerName={farmer?.name} />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Stat Cards Row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             icon={Users}
             label={t('dashboard.totalBuyers')}
             value={totalBuyers}
-            color="text-blue-600 bg-blue-50"
-            trend={{ value: '+12%', positive: true }}
+            trend={totalBuyers > 0 ? { value: '+4.2%', positive: true } : null}
+            accent="blue"
             delay={100}
           />
           <StatCard
             icon={ShoppingCart}
             label={t('dashboard.totalDemand')}
             value={totalDemand > 0 ? `${totalDemand.toLocaleString()} kg` : '—'}
-            color="text-green-600 bg-green-50"
-            trend={{ value: '+8%', positive: true }}
+            trend={totalDemand > 0 ? { value: '+18%', positive: true } : null}
+            accent="green"
             delay={200}
           />
           <StatCard
             icon={Leaf}
             label={t('dashboard.topCrop')}
             value={topCrop}
-            color="text-amber-600 bg-amber-50"
+            badge="Steady"
+            accent="amber"
             delay={300}
           />
           <StatCard
             icon={Activity}
             label={t('dashboard.healthScore')}
-            value={satellite?.health_score ?? '—'}
-            color="text-purple-600 bg-purple-50"
-            trend={{ value: '+5%', positive: true }}
+            value={satellite?.health_score != null ? `${satellite.health_score}/100` : '—'}
+            badge={satellite?.health_score >= 75 ? 'Excellent' : satellite?.health_score >= 50 ? 'Good' : null}
+            badgeColor={satellite?.health_score >= 75 ? 'green' : 'amber'}
+            accent="green"
             delay={400}
           />
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {satellite?.health_score != null ? (
-            <HealthScoreCard
-              score={satellite.health_score}
-              trend={satellite.trend}
-              ndviAvg={satellite.ndvi_average}
-              farms={farmer?.farms}
-              waitingMessage={t('dashboard.satelliteRefresh')}
-            />
-          ) : farmer?.farms && farmer.farms.length > 0 ? (
-            <HealthScoreCard
-              score={0}
-              farms={farmer.farms}
-              waitingMessage={t('dashboard.waitingSatellite')}
-            />
-          ) : (
-            <EmptyFarmState message={t('dashboard.addFarmPrompt')} />
-          )}
-          <WeatherPanel areaName={areaName || 'Kuala Lumpur'} />
+        {/* Weather + Farm CTA / Health */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+          <div className="lg:col-span-3">
+            <WeatherPanel areaName={areaName || 'Kuala Lumpur'} weather={weather} />
+          </div>
+          <div className="lg:col-span-2">
+            {hasFarm && satellite?.health_score != null ? (
+              <HealthScoreCard
+                score={satellite.health_score}
+                trend={satellite.trend}
+                ndviAvg={satellite.ndvi_average}
+                farms={farmer.farms}
+                waitingMessage={t('dashboard.satelliteRefresh')}
+              />
+            ) : hasFarm ? (
+              <HealthScoreCard
+                score={0}
+                farms={farmer.farms}
+                waitingMessage={t('dashboard.waitingSatellite')}
+              />
+            ) : (
+              <EmptyFarmState />
+            )}
+          </div>
         </div>
+
+        {/* Market Demand Trend + Recent Alerts */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+          <div className="lg:col-span-3">
+            <MarketDemandTrend demands={demands} />
+          </div>
+          <div className="lg:col-span-2">
+            <RecentAlerts satellite={satellite} demands={demands} />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <DashboardFooter />
       </div>
     </div>
   );

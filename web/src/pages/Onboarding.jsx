@@ -34,6 +34,7 @@ export default function Onboarding() {
         language: i18n.language,
       })
       localStorage.setItem('agripulse-farmerId', farmerId)
+      localStorage.setItem('agripulse-farmerName', form.name.trim())
       localStorage.setItem('agripulse-area', form.area_name.trim())
       navigate('/dashboard')
     } catch (err) {
@@ -50,22 +51,24 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
+      {/* Language selector — top right */}
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageSwitcher />
+      </div>
+
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/20">
             <Sprout className="w-8 h-8 text-primary-foreground" />
           </div>
           <h1 className="text-3xl font-bold text-foreground">{t('onboarding.title')}</h1>
-          <p className="text-muted-foreground mt-2">{t('onboarding.subtitle')}</p>
-          <div className="mt-3 flex justify-center">
-            <LanguageSwitcher />
-          </div>
+          <p className="text-muted-foreground mt-2 text-sm">{t('onboarding.subtitle')}</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="dashboard-card p-6 space-y-5">
           <InputField
             label={t('onboarding.name')}
             placeholder={t('onboarding.namePlaceholder')}
@@ -96,7 +99,7 @@ export default function Onboarding() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 px-4 rounded-xl font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-lg shadow-primary/20"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -116,10 +119,10 @@ export default function Onboarding() {
 function InputField({ label, error, ...props }) {
   return (
     <div>
-      <label className="block text-sm font-medium mb-1">{label}</label>
+      <label className="block text-sm font-medium text-foreground/80 mb-1.5">{label}</label>
       <input
-        className={`w-full px-4 py-2.5 rounded-xl border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors ${
-          error ? 'border-destructive' : 'border-input'
+        className={`w-full px-4 py-2.5 rounded-xl border bg-muted/20 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all ${
+          error ? 'border-destructive' : 'border-border/50'
         }`}
         {...props}
       />

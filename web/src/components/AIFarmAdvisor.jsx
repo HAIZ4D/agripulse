@@ -34,12 +34,16 @@ const statusConfig = {
   critical: { color: 'text-red-400', bg: 'bg-red-500/10', label: 'Critical' },
 }
 
-export default function AIFarmAdvisor({ report, weather, farm, area, language }) {
+export default function AIFarmAdvisor({
+  report, weather, farm, area, language,
+  zoneStats = null, changeDetection = null, criticalZones = null,
+  ndreAverage = null, ndwiAverage = null,
+}) {
   const { t, i18n } = useTranslation()
   const [advisory, setAdvisory] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [expandedSections, setExpandedSections] = useState({ pest: true, crops: true, tasks: true })
+  const [expandedSections, setExpandedSections] = useState({ pest: true, crops: true, tasks: true, zone: true })
 
   const lang = language || i18n.language || 'ms'
 
@@ -54,14 +58,22 @@ export default function AIFarmAdvisor({ report, weather, farm, area, language })
       const result = await generateFarmAdvisory({
         ndviData: {
           ndvi_average: report?.ndvi_average,
-          ndvi_zones: report?.ndvi_zones,
+          ndwi_average: report?.ndwi_average,
+          ndre_average: report?.ndre_average,
           health_score: report?.health_score,
           area_hectares: farm?.area_hectares || farm?.boundary?.area_hectares,
+          data_quality: report?.data_quality,
+          composite_days: report?.composite_days,
         },
         weatherData: weather || [],
         cropInfo: farm?.current_crops || [],
         farmArea: area,
         language: lang,
+        zoneStats: zoneStats || report?.zone_stats || null,
+        changeDetection: changeDetection || report?.change_detection || null,
+        criticalZones: criticalZones || (report?.zones || []).filter((z) => z.classification === 'critical'),
+        ndreAverage: ndreAverage ?? report?.ndre_average ?? null,
+        ndwiAverage: ndwiAverage ?? report?.ndwi_average ?? null,
       })
       setAdvisory(result)
     } catch (err) {
@@ -137,6 +149,19 @@ export default function AIFarmAdvisor({ report, weather, farm, area, language })
               <div className="bg-primary/5 rounded-lg p-4 flex gap-3">
                 <Brain className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <p className="text-sm leading-relaxed">{advisory.summary}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Zone Insight — precision zoning banner */}
+          {advisory.zone_insight && (
+            <div className="py-4">
+              <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4 flex gap-3">
+                <Target className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-xs text-blue-400 mb-1">Zone Precision Insight</p>
+                  <p className="text-sm leading-relaxed text-foreground/80">{advisory.zone_insight}</p>
+                </div>
               </div>
             </div>
           )}

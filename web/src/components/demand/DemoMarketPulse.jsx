@@ -1,78 +1,60 @@
+import { useTranslation } from 'react-i18next'
 import { ShoppingCart, Users, Flame, TrendingUp, ArrowUpRight } from 'lucide-react'
 
 const iconMap = [ShoppingCart, Users, Flame, TrendingUp]
-const glowColors = [
-  { bg: 'bg-primary/12', border: 'border-primary/18', text: 'text-primary', accent: 'primary' },
-  { bg: 'bg-blue-500/12', border: 'border-blue-500/18', text: 'text-blue-400', accent: 'blue' },
-  { bg: 'bg-orange-500/12', border: 'border-orange-500/18', text: 'text-orange-400', accent: 'orange' },
-  { bg: 'bg-emerald-500/12', border: 'border-emerald-500/18', text: 'text-emerald-400', accent: 'emerald' },
+const iconColors = [
+  'bg-primary/10 text-primary',
+  'bg-blue-500/10 text-blue-400',
+  'bg-amber-500/10 text-amber-400',
+  'bg-emerald-500/10 text-emerald-400',
 ]
-const changes = ['+12%', '+3', '', '']
-const sparklines = [
-  [30, 35, 28, 40, 38, 45, 55],
-  [1, 1, 2, 1, 2, 2, 2],
-  null,
-  null,
-]
-
-function MiniSparkline({ data, color }) {
-  if (!data) return null
-  const max = Math.max(...data)
-  const min = Math.min(...data)
-  const range = max - min || 1
-  const w = 80
-  const h = 24
-  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ')
-  return (
-    <svg width={w} height={h} className="mt-2 opacity-40">
-      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={`text-${color === 'primary' ? 'primary' : `${color}-400`}`} />
-    </svg>
-  )
-}
+const changes = ['+12.4% vs last week', '12 New accounts', '', '']
 
 export default function DemoMarketPulse({ demands }) {
+  const { t } = useTranslation()
   const totalDemand = demands.reduce((s, d) => s + (d.total_weekly_kg || d.totalQty || 0), 0)
   const topCrop = demands.length
     ? demands.reduce((a, b) => ((a.total_weekly_kg || a.totalQty) > (b.total_weekly_kg || b.totalQty) ? a : b)).crop
     : '—'
+  const risingCrops = demands.filter((d) => d.trend === 'rising').map((d) => d.crop)
+
   const stats = [
-    { label: 'Total Demand', value: `${totalDemand} kg` },
-    { label: 'Active Buyers', value: demands.reduce((s, d) => s + (d.buyer_count || d.buyers || 0), 0) },
-    { label: 'Trending Crop', value: topCrop },
-    { label: 'Rising Crops', value: demands.length > 0 ? 3 : 0 },
+    { label: t('demandIntel.totalWeekly').toUpperCase(), value: `${totalDemand.toLocaleString()}`, unit: 'MT' },
+    { label: t('demandIntel.activeBuyers').toUpperCase(), value: demands.reduce((s, d) => s + (d.buyer_count || d.buyers || 0), 0) },
+    { label: t('demandIntel.trendingCrop').toUpperCase(), value: topCrop, subtitle: 'Central Market Peak' },
+    { label: t('demandIntel.risingCrops').toUpperCase(), pills: risingCrops.length > 0 ? risingCrops.slice(0, 3) : ['—'] },
   ]
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((s, i) => {
         const Icon = iconMap[i]
-        const c = glowColors[i]
         return (
-          <div
-            key={s.label}
-            className="group relative glow-card rounded-2xl p-5 overflow-hidden"
-          >
-            {/* Top accent bar */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-600" />
-            {/* Corner glow */}
-            <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-primary/[0.04] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-600" />
+          <div key={i} className="stat-card">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">{s.label}</p>
 
-            <div className="relative z-10">
-              <div className="flex items-start justify-between mb-3">
-                <div className={`w-10 h-10 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center transition-all duration-400 group-hover:scale-105 group-hover:shadow-lg`}>
-                  <Icon className={`w-[18px] h-[18px] ${c.text}`} />
-                </div>
-                {changes[i] && (
-                  <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-primary bg-primary/8 border border-primary/12 px-2 py-0.5 rounded-lg">
-                    <ArrowUpRight className="w-3 h-3" />
-                    {changes[i]}
-                  </span>
-                )}
+            {s.pills ? (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {s.pills.map((p, j) => (
+                  <span key={j} className="px-2.5 py-1 rounded-md bg-primary/10 text-primary text-xs font-semibold capitalize">{p}</span>
+                ))}
               </div>
-              <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-[0.12em] mb-1.5">{s.label}</p>
-              <p className="text-2xl font-extrabold text-foreground capitalize font-mono-stat leading-none">{s.value}</p>
-              <MiniSparkline data={sparklines[i]} color={c.accent} />
-            </div>
+            ) : (
+              <>
+                <div className="flex items-baseline gap-1.5">
+                  <p className="text-2xl font-extrabold text-foreground capitalize leading-none">{s.value}</p>
+                  {s.unit && <span className="text-xs text-muted-foreground font-semibold">{s.unit}</span>}
+                </div>
+                {s.subtitle && <p className="text-xs text-muted-foreground mt-1">{s.subtitle}</p>}
+              </>
+            )}
+
+            {changes[i] && (
+              <p className={`text-[11px] font-semibold mt-2 flex items-center gap-1 ${i === 1 ? 'text-primary' : 'text-primary'}`}>
+                <ArrowUpRight className="w-3 h-3" />
+                {changes[i]}
+              </p>
+            )}
           </div>
         )
       })}

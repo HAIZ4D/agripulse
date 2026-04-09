@@ -81,11 +81,11 @@ export default function CropProfitability({ demands }) {
   })
 
   const radarColors = [
-    'hsl(152, 50%, 30%)',
-    'hsl(152, 60%, 50%)',
-    'hsl(40, 70%, 50%)',
-    'hsl(200, 60%, 50%)',
-    'hsl(280, 50%, 50%)',
+    '#22c55e',
+    '#4ade80',
+    '#facc15',
+    '#22d3ee',
+    '#a78bfa',
   ]
 
   return (
@@ -99,33 +99,33 @@ export default function CropProfitability({ demands }) {
               <BarChart data={cropData} barCategoryGap="30%" margin={{ top: 5, right: 10, left: -5, bottom: 5 }}>
                 <defs>
                   <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(0, 65%, 55%)" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="hsl(0, 65%, 45%)" stopOpacity={0.6} />
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#dc2626" stopOpacity={0.6} />
                   </linearGradient>
                   <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(152, 60%, 50%)" stopOpacity={1} />
-                    <stop offset="100%" stopColor="hsl(152, 60%, 35%)" stopOpacity={0.6} />
+                    <stop offset="0%" stopColor="#4ade80" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0.6} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(152, 20%, 16%)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
                 <XAxis
                   dataKey="crop"
-                  tick={{ fill: 'hsl(150, 12%, 50%)', fontSize: 12, fontWeight: 600 }}
+                  tick={{ fill: '#6b6b6b', fontSize: 12, fontWeight: 600 }}
                   axisLine={{ stroke: 'hsl(152, 20%, 16%)' }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: 'hsl(150, 12%, 50%)', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}
+                  tick={{ fill: '#6b6b6b', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(v) => `RM${(v / 1000).toFixed(1)}k`}
                 />
-                <Tooltip content={<BarTooltip />} cursor={{ fill: 'hsl(152, 60%, 42%, 0.06)' }} />
+                <Tooltip content={<BarTooltip />} cursor={{ fill: 'rgba(74,222,128,0.04)' }} />
                 <Legend
                   iconType="square"
                   iconSize={10}
                   wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }}
-                  formatter={(val) => <span style={{ color: 'hsl(150, 12%, 50%)' }}>{val === 'cost' ? t('recommendation.cost') : t('recommendation.revenue')}</span>}
+                  formatter={(val) => <span style={{ color: '#6b6b6b' }}>{val === 'cost' ? t('recommendation.cost') : t('recommendation.revenue')}</span>}
                 />
                 <Bar dataKey="cost" fill="url(#costGrad)" radius={[6, 6, 0, 0]} animationDuration={1200} />
                 <Bar dataKey="revenue" fill="url(#revGrad)" radius={[6, 6, 0, 0]} animationDuration={1200} animationBegin={200} />
@@ -152,10 +152,10 @@ export default function CropProfitability({ demands }) {
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-                  <PolarGrid stroke="hsl(152, 20%, 20%)" />
+                  <PolarGrid stroke="#333" />
                   <PolarAngleAxis
                     dataKey="metric"
-                    tick={{ fill: 'hsl(150, 12%, 50%)', fontSize: 11, fontWeight: 500 }}
+                    tick={{ fill: '#6b6b6b', fontSize: 11, fontWeight: 500 }}
                   />
                   <PolarRadiusAxis
                     angle={90}

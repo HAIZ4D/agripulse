@@ -1,13 +1,7 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Cloud, Sun, CloudRain, CloudDrizzle, CloudSun, Droplets, Wind, Thermometer } from 'lucide-react';
-
-const mockForecast = [
-  { day: 'Today', temp: 31, high: 33, low: 25, condition: 'sunny', humidity: 72, wind: 12 },
-  { day: 'Tue', temp: 29, high: 31, low: 24, condition: 'partly-cloudy', humidity: 78, wind: 15 },
-  { day: 'Wed', temp: 27, high: 29, low: 23, condition: 'rain', humidity: 85, wind: 18 },
-  { day: 'Thu', temp: 30, high: 32, low: 25, condition: 'drizzle', humidity: 75, wind: 10 },
-  { day: 'Fri', temp: 32, high: 34, low: 26, condition: 'sunny', humidity: 68, wind: 8 },
-];
+import { Cloud, Sun, CloudRain, CloudDrizzle, CloudSun, Droplets, Wind, Eye, Zap } from 'lucide-react';
+import { fetchForecast } from '../../services/weatherMY';
 
 const weatherIcons = {
   sunny: Sun,
@@ -17,72 +11,107 @@ const weatherIcons = {
   drizzle: CloudDrizzle,
 };
 
-const weatherGradients = {
-  sunny: 'from-amber-500 via-orange-500 to-rose-500',
-  'partly-cloudy': 'from-sky-500 via-blue-500 to-indigo-500',
-  cloudy: 'from-slate-500 via-gray-500 to-zinc-500',
-  rain: 'from-blue-600 via-indigo-600 to-violet-600',
-  drizzle: 'from-cyan-500 via-blue-500 to-indigo-500',
-};
+function getConditionKey(forecastText) {
+  if (!forecastText) return 'cloudy';
+  const t = forecastText.toLowerCase();
+  if (t.includes('petir') || t.includes('ribut') || t.includes('thunder')) return 'rain';
+  if (t.includes('hujan') || t.includes('rain')) return 'rain';
+  if (t.includes('renyai') || t.includes('drizzle')) return 'drizzle';
+  if (t.includes('cerah') || t.includes('fair') || t.includes('sunny')) return 'sunny';
+  if (t.includes('mendung') || t.includes('cloudy') || t.includes('awan')) return 'partly-cloudy';
+  return 'cloudy';
+}
 
-export default function WeatherPanel({ areaName }) {
+export default function WeatherPanel({ areaName, weather: externalWeather }) {
   const { t } = useTranslation();
-  const today = mockForecast[0];
-  const TodayIcon = weatherIcons[today.condition] || Cloud;
+  const [forecast, setForecast] = useState([]);
+
+  useEffect(() => {
+    if (externalWeather?.length > 0) {
+      setForecast(externalWeather);
+      return;
+    }
+    if (!areaName) return;
+    fetchForecast(areaName)
+      .then((data) => { if (data?.length > 0) setForecast(data); })
+      .catch((err) => console.error('Weather error:', err));
+  }, [areaName, externalWeather]);
+
+  const today = forecast[0];
+  const condition = today ? getConditionKey(today.summary_forecast || today.morning_forecast) : 'sunny';
+  const TodayIcon = weatherIcons[condition] || Cloud;
+  const temp = today ? Math.round((today.min_temp + today.max_temp) / 2) : '--';
+  const conditionLabel = today?.summary_forecast || today?.morning_forecast || '--';
+  const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
   return (
-    <div className="dashboard-card opacity-0 animate-slide-up" style={{ animationDelay: '400ms' }}>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold flex items-center gap-2.5 text-foreground">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center" style={{ boxShadow: '0 0 20px -4px rgba(59,130,246,0.4)' }}>
-            <Cloud className="w-5 h-5 text-primary-foreground" />
-          </div>
-          {t('dashboard.weather')}
-        </h3>
-        {areaName && (
-          <span className="text-xs font-medium text-muted-foreground glass-surface px-3 py-1.5 rounded-full">
-            📍 {areaName}
-          </span>
-        )}
+    <div className="dashboard-card opacity-0 animate-slide-up h-full" style={{ animationDelay: '400ms' }}>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+            {t('dashboard.weather')} <TodayIcon className="w-5 h-5 text-muted-foreground" />
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{areaName || 'Malaysia'}</p>
+        </div>
+        <span className="px-3 py-1 rounded-lg bg-primary/10 border border-primary/15 text-primary text-xs font-semibold capitalize">
+          {conditionLabel}
+        </span>
       </div>
 
-      <div className={`rounded-2xl bg-gradient-to-br ${weatherGradients[today.condition]} p-5 mb-5 relative overflow-hidden`}>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-        <div className="relative z-10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-primary-foreground/70 uppercase tracking-wider">{t('dashboard.today')}</p>
-              <p className="text-5xl font-extrabold text-primary-foreground tracking-tight mt-1">{today.temp}°</p>
-              <p className="text-sm text-primary-foreground/70 mt-1 capitalize">{today.condition.replace('-', ' ')}</p>
-            </div>
-            <TodayIcon className="w-16 h-16 text-primary-foreground/80 drop-shadow-lg" />
+      <div className="flex items-start gap-6 mb-5">
+        <div className="flex items-start">
+          <span className="text-6xl font-extrabold tracking-tighter text-foreground leading-none">{temp}</span>
+          <span className="text-xl font-light text-muted-foreground mt-1">°C</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-xs mt-1">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Droplets className="w-3.5 h-3.5 text-blue-400/60" />
+            <span className="uppercase tracking-wider font-semibold text-[10px]">Humidity</span>
           </div>
-          <div className="flex gap-5 mt-4 pt-3 border-t border-primary-foreground/15">
-            <div className="flex items-center gap-1.5 text-primary-foreground/70 text-xs">
-              <Droplets className="w-3.5 h-3.5" /> {today.humidity}%
-            </div>
-            <div className="flex items-center gap-1.5 text-primary-foreground/70 text-xs">
-              <Wind className="w-3.5 h-3.5" /> {today.wind} km/h
-            </div>
-            <div className="flex items-center gap-1.5 text-primary-foreground/70 text-xs">
-              <Thermometer className="w-3.5 h-3.5" /> {today.low}° – {today.high}°
-            </div>
+          <span className="text-foreground font-semibold">72%</span>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Wind className="w-3.5 h-3.5 text-sky-400/60" />
+            <span className="uppercase tracking-wider font-semibold text-[10px]">Wind</span>
           </div>
+          <span className="text-foreground font-semibold">12 km/h</span>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Eye className="w-3.5 h-3.5 text-indigo-400/60" />
+            <span className="uppercase tracking-wider font-semibold text-[10px]">Visibility</span>
+          </div>
+          <span className="text-foreground font-semibold">10 km</span>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Zap className="w-3.5 h-3.5 text-yellow-400/60" />
+            <span className="uppercase tracking-wider font-semibold text-[10px]">UV Index</span>
+          </div>
+          <span className="text-foreground font-semibold">High (7)</span>
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {mockForecast.slice(1).map((day, i) => {
-          const DayIcon = weatherIcons[day.condition] || Cloud;
+      {/* Wave decoration */}
+      <div className="h-10 mb-4 rounded-xl bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 flex items-end overflow-hidden">
+        <svg viewBox="0 0 400 40" className="w-full h-8 text-primary/20">
+          <path d="M0 30 Q50 10 100 25 T200 20 T300 28 T400 15 L400 40 L0 40 Z" fill="currentColor" />
+        </svg>
+      </div>
+
+      {/* Forecast days */}
+      <div className="flex gap-2">
+        {forecast.slice(1, 5).map((day, i) => {
+          const dayDate = new Date(day.date);
+          const dayCondition = getConditionKey(day.summary_forecast || day.morning_forecast);
+          const DayIcon = weatherIcons[dayCondition] || Cloud;
           return (
-            <div key={i} className="flex-1 min-w-[72px] flex flex-col items-center p-3 rounded-xl glass-surface hover:bg-secondary/60 transition-all duration-200">
-              <span className="text-xs font-semibold text-muted-foreground mb-2">{day.day}</span>
-              <DayIcon className="w-6 h-6 text-foreground/60 mb-2" />
-              <span className="text-sm font-bold text-foreground">{day.temp}°</span>
-              <span className="text-[10px] text-muted-foreground mt-0.5">{day.low}°–{day.high}°</span>
+            <div key={i} className="flex-1 flex flex-col items-center p-2.5 rounded-xl bg-muted/20 border border-border/30 hover:bg-muted/40 transition-colors">
+              <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2">{dayNames[dayDate.getDay()]}</span>
+              <DayIcon className="w-5 h-5 text-foreground/50 mb-2" />
+              <span className="text-sm font-bold text-foreground">{Math.round((day.min_temp + day.max_temp) / 2)}°</span>
             </div>
           );
         })}
+        {forecast.length <= 1 && (
+          <p className="text-xs text-muted-foreground py-4 text-center w-full">{t('common.loading')}</p>
+        )}
       </div>
     </div>
   );

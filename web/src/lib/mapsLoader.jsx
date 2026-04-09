@@ -1,6 +1,6 @@
 import { useJsApiLoader } from '@react-google-maps/api'
 
-const LIBRARIES = ['drawing', 'geometry']
+const LIBRARIES = ['drawing', 'geometry', 'places']
 
 /**
  * Shared Google Maps loader hook.

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BarChart3, Loader2, TrendingUp, Sparkles, CloudRain, Sun, Zap, Activity, DollarSign } from 'lucide-react'
+import { Calendar, Download, Loader2, CloudRain, Sun, Zap, DollarSign } from 'lucide-react'
 import {
   subscribeDemandAggregates,
   subscribePlantingPlan,
@@ -10,13 +10,11 @@ import {
 import { fetchForecast } from '../services/weatherMY'
 import { getDistrict } from '../lib/utils'
 
-import { Section, SectionHeading } from '../components/demand/Section'
 import DemoMarketPulse from '../components/demand/DemoMarketPulse'
 import DemoDemandChart from '../components/demand/DemoDemandChart'
 import DemoDemandDonut from '../components/demand/DemoDemandDonut'
 import DemoHeatmapCard from '../components/demand/DemoHeatmapCard'
 import CropProfitability from '../components/demand/CropProfitability'
-
 import PlantingPlan from '../components/PlantingPlan'
 import DemandForecast from '../components/DemandForecast'
 
@@ -38,11 +36,7 @@ export default function DemandIntel() {
   }
 
   useEffect(() => {
-    if (!areaName) {
-      setLoading(false)
-      return
-    }
-
+    if (!areaName) { setLoading(false); return }
     setLoading(true)
     let loaded = 0
     const total = farmerId ? 2 : 1
@@ -54,7 +48,6 @@ export default function DemandIntel() {
     })
 
     let unsubPlan = () => {}
-
     if (farmerId) {
       unsubPlan = subscribePlantingPlan(farmerId, (data) => {
         setPlantingPlan(data)
@@ -64,18 +57,12 @@ export default function DemandIntel() {
       checkDone()
     }
 
-    // Fetch weather
     fetchForecast(areaName)
       .then((data) => setWeather(data))
       .catch((err) => console.error('Weather fetch error:', err))
 
     const timeout = setTimeout(() => setLoading(false), 3000)
-
-    return () => {
-      unsubDemand()
-      unsubPlan()
-      clearTimeout(timeout)
-    }
+    return () => { unsubDemand(); unsubPlan(); clearTimeout(timeout) }
   }, [areaName, farmerId])
 
   async function handleRemove(cropName) {
@@ -83,242 +70,190 @@ export default function DemandIntel() {
     try {
       await removeFromPlan(farmerId, cropName)
       showToast(t('demandIntel.removedFromPlan'))
-    } catch (err) {
-      console.error('Remove error:', err)
-    }
+    } catch (err) { console.error('Remove error:', err) }
   }
 
   async function handleStatusChange(cropName, newStatus) {
     if (!farmerId) return
-    try {
-      await updatePlanStatus(farmerId, cropName, newStatus)
-    } catch (err) {
-      console.error('Status change error:', err)
-    }
+    try { await updatePlanStatus(farmerId, cropName, newStatus) }
+    catch (err) { console.error('Status change error:', err) }
   }
 
   if (loading) {
     return (
-      <div className="demand-intel-theme min-h-screen bg-background flex flex-col items-center justify-center gap-5">
-        {/* Ambient bg */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.06] blur-[120px]" />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-card border border-border/40 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
-        <div className="relative z-10 flex flex-col items-center gap-5">
-          <div className="relative">
-            <div className="absolute inset-[-12px] rounded-full bg-primary/8 animate-ping" style={{ animationDuration: '2s' }} />
-            <div className="absolute inset-[-24px] rounded-full bg-primary/4 animate-pulse" />
-            <div className="w-16 h-16 rounded-2xl bg-card border border-primary/20 flex items-center justify-center" style={{ boxShadow: 'var(--glow-primary)' }}>
-              <Loader2 className="w-7 h-7 animate-spin text-primary" />
-            </div>
-          </div>
-          <div className="text-center">
-            <p className="text-foreground font-semibold">Loading intelligence…</p>
-            <p className="text-muted-foreground text-xs mt-1.5">Analyzing market data in real-time</p>
-          </div>
+        <div className="text-center">
+          <p className="text-foreground font-semibold text-sm">{t('demandIntel.loadingIntel')}</p>
+          <p className="text-muted-foreground text-xs mt-1">{t('demandIntel.analyzingRealtime')}</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="demand-intel-theme min-h-screen bg-background relative">
-      {/* Ambient floating orbs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[8%] left-[12%] w-[500px] h-[500px] rounded-full bg-primary/[0.035] blur-[120px] animate-orb-1" />
-        <div className="absolute bottom-[15%] right-[8%] w-[400px] h-[400px] rounded-full bg-primary/[0.025] blur-[100px] animate-orb-2" />
-        <div className="absolute top-[55%] left-[45%] w-[350px] h-[350px] rounded-full bg-secondary/[0.015] blur-[100px] animate-orb-1" style={{ animationDelay: '-10s' }} />
-      </div>
-
+    <div className="min-h-screen">
       {/* Toast */}
       {toast && (
-        <div
-          className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-medium animate-slide-in-right backdrop-blur-xl border ${
-            toast.type === 'error'
-              ? 'bg-destructive/80 text-destructive-foreground border-destructive/40'
-              : 'bg-primary/80 text-primary-foreground border-primary/40'
-          }`}
-          style={{ boxShadow: toast.type === 'error' ? '0 0 30px hsl(0,65%,45%,0.3)' : 'var(--glow-primary)' }}
-        >
+        <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-medium border ${
+          toast.type === 'error'
+            ? 'bg-destructive/90 text-destructive-foreground border-destructive/40'
+            : 'bg-primary/90 text-primary-foreground border-primary/40'
+        }`}>
           {toast.message}
         </div>
       )}
 
-      {/* Header */}
-      <header className="border-b border-border/30 bg-background/60 backdrop-blur-2xl sticky top-0 z-40 relative">
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/25 to-transparent" />
-        <div className="w-full px-3 lg:px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="relative group">
-              <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center" style={{ boxShadow: '0 0 20px hsl(152,60%,42%,0.25)' }}>
-                <BarChart3 className="w-6 h-6 text-primary-foreground" />
-              </div>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-gradient">{t('demandIntel.title')}</h1>
-              <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                Real-time market insights
-                <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
-                <span className="font-semibold text-foreground/60">{areaName || 'Kuala Lumpur'}</span>
-              </p>
-            </div>
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
+              {t('demandIntel.title')}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t('demandIntel.realtimeInsights')}
+            </p>
           </div>
-          <div className="hidden sm:flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-muted/30 border border-border/40 text-xs text-muted-foreground">
-              <Activity className="w-3.5 h-3.5 text-primary/60" />
-              <span>Last sync: <span className="text-foreground/70 font-medium">Just now</span></span>
-            </div>
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/8 border border-primary/15 text-primary text-xs font-bold tracking-wide">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary glow-dot" />
-              </span>
-              LIVE
-            </span>
+          <div className="flex items-center gap-2.5">
+            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-muted/40 border border-border/50 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              {t('demandIntel.thisWeek')}
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+              <Download className="w-4 h-4" />
+              {t('demandIntel.exportReport')}
+            </button>
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="w-full px-4 lg:px-8 py-10 space-y-8 relative z-10">
-
-        {/* Market Pulse */}
-        <section className="animate-fade-up">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-widest">Overview</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Key metrics at a glance</p>
-            </div>
-          </div>
-          <DemoMarketPulse demands={demands} />
-        </section>
-
-        {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+        {/* Market Pulse Stats */}
+        <DemoMarketPulse demands={demands} />
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <Section delay={1} className="lg:col-span-3">
-            <SectionHeading icon={BarChart3}>Demand Comparison</SectionHeading>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+          <div className="lg:col-span-3 dashboard-card p-5">
+            <div className="mb-4">
+              <h3 className="text-base font-bold text-foreground">{t('demandIntel.demandComparison')}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('demandIntel.topCropsByVolume')}</p>
+            </div>
             <DemoDemandChart demands={demands} />
-          </Section>
-
-          <Section delay={2} className="lg:col-span-2">
-            <SectionHeading icon={Sparkles}>Distribution</SectionHeading>
+          </div>
+          <div className="lg:col-span-2 dashboard-card p-5">
+            <div className="mb-4">
+              <h3 className="text-base font-bold text-foreground">{t('demandIntel.distribution')}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('demandIntel.marketSegment')}</p>
+            </div>
             <DemoDemandDonut demands={demands} />
-          </Section>
+          </div>
         </div>
 
-        {/* Heatmap */}
-        <Section delay={2}>
-          <SectionHeading icon={TrendingUp} subtitle="Live demand intensity across crops">
-            Demand Heatmap
-          </SectionHeading>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {demands.length > 0 ? demands.slice(0, 4).map((d) => (
-              <DemoHeatmapCard key={d.crop} demand={d} />
-            )) : <p className="text-sm text-muted-foreground">Waiting for demand data...</p>}
+        {/* Heatmap + Weather row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Heatmap */}
+          <div className="dashboard-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-foreground">{t('demandIntel.demandHeatmap')}</h3>
+              <button className="text-xs text-primary font-semibold hover:text-primary/80 transition-colors">
+                {t('demandIntel.viewMapView')}
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {demands.length > 0 ? demands.slice(0, 4).map((d) => (
+                <DemoHeatmapCard key={d.crop} demand={d} />
+              )) : <p className="text-sm text-muted-foreground col-span-2">{t('demandIntel.waitingDemand')}</p>}
+            </div>
           </div>
-        </Section>
 
-        {/* Weather Insights */}
-        <Section delay={3}>
-          <SectionHeading icon={CloudRain} subtitle="Weather impact on crop demand">
-            Weather Insights
-          </SectionHeading>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Rain */}
-            <div className="group rounded-xl overflow-hidden relative border border-primary/12 transition-all duration-500 hover:border-primary/25 hover:shadow-[0_0_25px_hsl(152,60%,42%,0.08)]" style={{ background: 'linear-gradient(145deg, hsl(152, 32%, 13%) 0%, hsl(152, 28%, 9%) 100%)' }}>
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="p-5 relative z-10">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="w-9 h-9 rounded-xl bg-primary/12 border border-primary/15 flex items-center justify-center">
-                    <CloudRain className="w-4.5 h-4.5 text-primary" />
+          {/* Weather Insights */}
+          <div className="dashboard-card p-5">
+            <h3 className="text-base font-bold text-foreground mb-4 flex items-center gap-2">
+              <CloudRain className="w-4 h-4 text-muted-foreground" />
+              {t('demandIntel.weatherInsights')}
+            </h3>
+            <div className="space-y-3">
+              {/* Rain card */}
+              <div className="p-4 rounded-xl bg-muted/20 border border-border/30">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <CloudRain className="w-4 h-4 text-primary" />
                   </span>
                   <div>
-                    <p className="font-bold text-foreground text-[13px]">Rain expected</p>
-                    <p className="text-[11px] text-primary font-bold mt-0.5">↑ 20-30% demand</p>
+                    <p className="font-semibold text-foreground text-sm">{t('demandIntel.rainExpected')}</p>
+                    <p className="text-[11px] text-primary font-semibold">{t('demandIntel.demandRise20')}</p>
                   </div>
                 </div>
-                <p className="text-muted-foreground text-xs leading-relaxed mb-3">
-                  Leafy greens demand rises during rainy periods.
-                </p>
+                <p className="text-muted-foreground text-xs mb-2">{t('demandIntel.leafyGreensRain')}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {['Kangkung', 'Bayam', 'Sawi'].map((c) => (
-                    <span key={c} className="px-2.5 py-1 rounded-lg bg-primary/8 border border-primary/12 text-primary text-[11px] font-semibold">{c}</span>
+                    <span key={c} className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[11px] font-semibold">{c}</span>
                   ))}
                 </div>
               </div>
-            </div>
-
-            {/* Hot */}
-            <div className="group rounded-xl overflow-hidden relative border border-secondary/12 transition-all duration-500 hover:border-secondary/25 hover:shadow-[0_0_25px_hsl(46,70%,52%,0.08)]" style={{ background: 'linear-gradient(145deg, hsl(40, 22%, 12%) 0%, hsl(35, 18%, 8%) 100%)' }}>
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-secondary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="p-5 relative z-10">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="w-9 h-9 rounded-xl bg-secondary/12 border border-secondary/15 flex items-center justify-center">
-                    <Sun className="w-4.5 h-4.5 text-secondary" />
+              {/* Hot card */}
+              <div className="p-4 rounded-xl bg-muted/20 border border-border/30">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                    <Sun className="w-4 h-4 text-amber-400" />
                   </span>
                   <div>
-                    <p className="font-bold text-foreground text-[13px]">Hot weather ahead</p>
-                    <p className="text-[11px] text-secondary font-bold mt-0.5">↑ 15% demand</p>
+                    <p className="font-semibold text-foreground text-sm">{t('demandIntel.hotWeatherAhead')}</p>
+                    <p className="text-[11px] text-amber-400 font-semibold">{t('demandIntel.demandRise15')}</p>
                   </div>
                 </div>
-                <p className="text-muted-foreground text-xs leading-relaxed mb-3">
-                  Cooling vegetables demand rises. Good for cucumber.
-                </p>
+                <p className="text-muted-foreground text-xs mb-2">{t('demandIntel.coolingVegetables')}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {['Timun', 'Tembikai'].map((c) => (
-                    <span key={c} className="px-2.5 py-1 rounded-lg bg-secondary/8 border border-secondary/12 text-secondary text-[11px] font-semibold">{c}</span>
+                    <span key={c} className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 text-[11px] font-semibold">{c}</span>
                   ))}
                 </div>
               </div>
             </div>
           </div>
-        </Section>
-
-        {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+        </div>
 
         {/* AI Forecast */}
-        <Section delay={3}>
-          <SectionHeading icon={Zap} subtitle="Predict demand trends for the next 2 weeks">
-            AI Forecast
-          </SectionHeading>
-          <div className="mt-[-1rem]">
-            <DemandForecast
-              demands={demands}
-              weather={weather}
-              area={areaName}
-              language={i18n.language}
-            />
+        <div className="dashboard-card p-5">
+          <div className="mb-4">
+            <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+              <Zap className="w-4 h-4 text-primary" />
+              {t('demandIntel.aiForecast')}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('demandIntel.predictDemand')}</p>
           </div>
-        </Section>
-
-        {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+          <DemandForecast
+            demands={demands}
+            weather={weather}
+            area={areaName}
+            language={i18n.language}
+          />
+        </div>
 
         {/* Crop Profitability */}
-        <Section delay={4}>
-          <SectionHeading icon={DollarSign} subtitle="Revenue vs cost analysis per hectare">
-            Crop Profitability
-          </SectionHeading>
+        <div className="dashboard-card p-5">
+          <div className="mb-4">
+            <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-primary" />
+              {t('demandIntel.profitComparison')}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('demandIntel.profitSubtitle')}</p>
+          </div>
           <CropProfitability demands={demands} />
-        </Section>
+        </div>
 
-        {/* My Planting Plan */}
-        <div className="animate-fade-up-delay-4 glow-card p-6 rounded-2xl border border-primary/20 bg-background/50 backdrop-blur-xl">
-           <PlantingPlan
+        {/* Planting Plan */}
+        <div className="dashboard-card p-5">
+          <PlantingPlan
             plan={plantingPlan}
             onRemove={handleRemove}
             onStatusChange={handleStatusChange}
           />
         </div>
 
-        {/* Footer spacer */}
         <div className="h-4" />
-      </main>
+      </div>
     </div>
   )
 }

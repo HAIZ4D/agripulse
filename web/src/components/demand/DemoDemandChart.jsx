@@ -1,14 +1,14 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
-const COLORS = ['hsl(152, 60%, 42%)', 'hsl(165, 50%, 50%)', 'hsl(46, 70%, 52%)', 'hsl(200, 60%, 50%)']
+const COLORS = ['#4ade80', '#22d3ee', '#facc15', '#a78bfa']
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const d = payload[0]
   return (
-    <div className="bg-card/95 backdrop-blur-xl border border-primary/20 rounded-xl px-4 py-3 shadow-lg" style={{ boxShadow: 'var(--glow-primary)' }}>
+    <div className="bg-card border border-border rounded-xl px-4 py-3 shadow-lg">
       <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">{d.payload.crop}</p>
-      <p className="text-lg font-bold text-foreground font-mono-stat">{d.value} kg</p>
+      <p className="text-lg font-bold text-foreground">{d.value} kg</p>
     </div>
   )
 }
@@ -31,20 +31,20 @@ export default function DemoDemandChart({ demands }) {
               </linearGradient>
             ))}
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(152, 20%, 16%)" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
           <XAxis
             dataKey="crop"
-            tick={{ fill: 'hsl(150, 12%, 50%)', fontSize: 12, fontWeight: 600 }}
-            axisLine={{ stroke: 'hsl(152, 20%, 16%)' }}
+            tick={{ fill: '#6b6b6b', fontSize: 12, fontWeight: 600 }}
+            axisLine={{ stroke: '#222' }}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: 'hsl(150, 12%, 50%)', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}
+            tick={{ fill: '#6b6b6b', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             unit=" kg"
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(152, 60%, 42%, 0.06)' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(74,222,128,0.04)' }} />
           <Bar dataKey="totalQty" radius={[8, 8, 0, 0]} animationDuration={1200} animationEasing="ease-out">
             {data.map((_, i) => (
               <Cell key={i} fill={`url(#barGrad${i % COLORS.length})`} />

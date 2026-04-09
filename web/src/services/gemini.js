@@ -196,17 +196,63 @@ Return ONLY valid JSON:
   return JSON.parse(jsonMatch[0])
 }
 
-export async function generateFarmAdvisory({ ndviData, weatherData, cropInfo, farmArea, language = 'ms' }) {
+export async function generateFarmAdvisory({
+  ndviData, weatherData, cropInfo, farmArea, language = 'ms',
+  // Zone data from satellite report
+  zoneStats = null, changeDetection = null, criticalZones = null,
+  ndreAverage = null, ndwiAverage = null,
+}) {
   const today = new Date()
   const upcomingEvents = getUpcomingMalaysianEvents(today)
   const season = getMalaysianSeason(today)
 
-  const prompt = `You are a senior Malaysian agricultural advisor and precision farming expert with deep knowledge of tropical crop management, pest/disease patterns, and satellite-based crop monitoring.
+  // --- Build zone context string ---
+  let zoneContext = ''
+  if (zoneStats && zoneStats.total_zones > 0) {
+    const healthyPct = Math.round((zoneStats.healthy_count / zoneStats.total_zones) * 100)
+    const moderatePct = Math.round((zoneStats.moderate_count / zoneStats.total_zones) * 100)
+    const criticalPct = Math.round((zoneStats.critical_count / zoneStats.total_zones) * 100)
+    zoneContext = `
+## 2b. FARM ZONING DATA (Precision Grid — ${zoneStats.total_zones} micro-zones analyzed):
+- Healthy zones: ${zoneStats.healthy_count} (${healthyPct}%)
+- Moderate stress zones: ${zoneStats.moderate_count} (${moderatePct}%)
+- Critical zones: ${zoneStats.critical_count} (${criticalPct}%)
+${
+  criticalZones && criticalZones.length > 0
+    ? `\nCRITICAL ZONE DETAILS (require immediate attention):\n${criticalZones.slice(0, 5).map((z) =>
+        `- Zone ${z.zone_id}: NDVI=${z.ndvi?.toFixed(3) ?? 'N/A'}, NDWI=${z.ndwi?.toFixed(3) ?? 'N/A'}, NDRE=${z.ndre?.toFixed(3) ?? 'N/A'} → Recommended action: ${z.action_needed ?? 'inspect'}`
+      ).join('\n')}`
+    : ''
+}${changeDetection ? `
 
-Analyze this farm's complete data and provide a comprehensive advisory report.
+CHANGE DETECTION (vs previous satellite scan):
+- Improved zones: ${changeDetection.zones_improved}
+- Declined zones: ${changeDetection.zones_declined}
+- Stable zones: ${changeDetection.zones_stable}
+- Newly critical: ${changeDetection.zones_critical_new}
+- Overall trend: ${changeDetection.overall_trend}` : ''}` }
 
-## 1. Farm Satellite Health Data:
-${JSON.stringify(ndviData, null, 2)}
+  // --- Build multi-index context ---
+  const ndreVal = ndreAverage ?? ndviData?.ndre_average
+  const ndwiVal = ndwiAverage ?? ndviData?.ndwi_average
+  const ndreContext = ndreVal !== null && ndreVal !== undefined
+    ? `- NDRE (Red-Edge, early nitrogen stress): ${ndreVal.toFixed(4)}${
+        ndreVal < 0.18 ? ' ⚠ CRITICAL — severe nitrogen deficiency'
+        : ndreVal < 0.28 ? ' ⚠ LOW — apply nitrogen fertilizer within 7 days'
+        : ' ✓ Adequate'
+      }`
+    : '- NDRE: unavailable'
+
+  const prompt = `You are a senior Malaysian agricultural advisor and precision farming expert with deep knowledge of tropical crop management, pest/disease patterns, and satellite-based precision zoning.
+
+Analyze this farm's COMPLETE data including multi-index satellites and precision zone analysis.
+
+## 1. Farm Multi-Index Satellite Data (30-day cloud-masked composite):
+- NDVI (vegetation health): ${ndviData?.ndvi_average?.toFixed(4) ?? 'N/A'} — farm-wide average
+- NDWI (water/irrigation): ${ndwiVal !== null && ndwiVal !== undefined ? ndwiVal.toFixed(4) : 'N/A'}
+${ndreContext}
+- Health Score: ${ndviData?.health_score ?? 'N/A'}/100
+${zoneContext}
 
 ## 2. Farm Details:
 - Location: ${farmArea || 'Malaysia'}
@@ -224,26 +270,28 @@ ${JSON.stringify(weatherData, null, 2)}
 - ${season}
 
 ## 7. Upcoming Events (next 8 weeks):
-${upcomingEvents.length > 0 ? upcomingEvents.map(function(e) { return '- ' + e.name + ' (' + e.date + '): ' + e.impact }).join('\n') : 'No major events.'}
+${upcomingEvents.length > 0 ? upcomingEvents.map((e) => `- ${e.name} (${e.date}): ${e.impact}`).join('\n') : 'No major events.'}
 
 ## ANALYSIS INSTRUCTIONS:
-1. **Pest & Disease Risk**: Based on weather (humidity, rain, temperature) and NDVI stress patterns, identify specific pest/disease risks for the crops listed. Name specific pests common in Malaysian agriculture (e.g., diamondback moth for brassicas, thrips for chili, leaf blight for kangkung).
-2. **Crop Health Action Plan**: For each crop, provide specific actionable advice based on NDVI values and weather.
-3. **Irrigation Advisory**: Based on weather forecast and NDVI/NDWI, recommend watering schedule.
-4. **Fertilization Timing**: Based on crop growth stage and weather.
-5. **Harvest Prediction**: For each crop, estimate optimal harvest window based on planted date and current conditions.
-6. **Market Timing**: Cross-reference harvest with upcoming events for best selling prices.
+1. **Precision Zone Actions**: If there are critical zones, identify WHAT to do and WHERE. Reference critical zone IDs. Distinguish irrigate vs fertilize vs inspect actions.
+2. **NDRE Early Warning**: If NDRE < 0.28, PRIORITIZE nitrogen/fertilizer advice — this detects deficiency weeks before visible damage. Cite the exact NDRE value.
+3. **NDWI Irrigation**: If NDWI < -0.20, flag irrigation need. If NDWI > 0.20, flag waterlogging risk.
+4. **Pest & Disease Risk**: Based on weather and satellite stress signals, name specific pests relevant to Malaysian agriculture.
+5. **Crop Health Action Plan**: For each crop, provide specific actionable advice.
+6. **Weekly Tasks**: Create a prioritized task list — critical zone actions first, then general maintenance.
+7. **Market Timing**: Cross-reference harvest with upcoming events.
 
 Respond in ${language === 'ms' ? 'Bahasa Melayu' : 'English'}.
 
 Return ONLY valid JSON:
 {
   "farm_status": "excellent|good|attention_needed|critical",
-  "summary": "2-3 sentence overall farm assessment",
+  "summary": "2-3 sentence overall farm assessment citing NDVI, NDWI, NDRE values and zone breakdown",
+  "zone_insight": "1-2 sentence summary of zone analysis — where are problems, what actions are needed. Null if no zone data.",
   "pest_risks": [
     {
       "pest": "pest/disease name",
-      "risk_level": "low|medium|high",
+      "risk_level": "low|medium|medium-high|high",
       "affected_crops": ["crop names"],
       "signs": "what to look for",
       "prevention": "specific prevention action"
@@ -262,8 +310,8 @@ Return ONLY valid JSON:
   ],
   "weekly_tasks": [
     {
-      "day": "Today|Tomorrow|This week|Next week",
-      "task": "specific task description",
+      "day": "Today|Tomorrow|Day 3|This week|Next week",
+      "task": "specific task description — reference zone IDs for spatial tasks",
       "priority": "high|medium|low"
     }
   ],
@@ -348,12 +396,26 @@ Return ONLY valid JSON:
 }
 
 export async function generateHealthReport({ ndviData, weatherData, cropInfo, language = 'ms' }) {
-  const prompt = `You are an agricultural satellite data analyst for Malaysian farms.
+  const ndreVal = ndviData?.ndre_average
+  const ndwiVal = ndviData?.ndwi_average
+  const zoneStats = ndviData?.zone_stats
 
-Analyze this farm's satellite health data and provide a clear report.
+  const prompt = `You are an agricultural satellite data analyst for Malaysian farms with precision zone monitoring capability.
 
-## NDVI/NDWI Data:
-${JSON.stringify(ndviData, null, 2)}
+Analyze this farm's multi-index satellite health data and provide a clear, actionable report.
+
+## Multi-Index Satellite Data (30-day composite):
+- NDVI (vegetation health): ${ndviData?.ndvi_average?.toFixed(4) ?? 'N/A'}
+- NDWI (water content): ${ndwiVal !== null && ndwiVal !== undefined ? ndwiVal.toFixed(4) : 'N/A'}
+- NDRE (early nitrogen stress): ${ndreVal !== null && ndreVal !== undefined ? ndreVal.toFixed(4) : 'N/A'}
+- Health Score: ${ndviData?.health_score ?? 'N/A'}/100
+- Data quality: ${ndviData?.data_quality ?? 'standard'} (${ndviData?.composite_days ?? 10}-day composite)
+
+## Zone Summary:
+${zoneStats ? `- Total zones: ${zoneStats.total_zones}\n- Healthy: ${zoneStats.healthy_count} | Moderate: ${zoneStats.moderate_count} | Critical: ${zoneStats.critical_count}` : 'Zone data not available.'}
+
+## Change Detection:
+${ndviData?.change_detection ? JSON.stringify(ndviData.change_detection, null, 2) : 'No previous scan available.'}
 
 ## Current Weather:
 ${JSON.stringify(weatherData, null, 2)}
@@ -367,11 +429,12 @@ Return ONLY valid JSON:
 {
   "overall_status": "healthy|moderate|stressed|critical",
   "health_score": 0-100,
-  "summary": "2-3 sentence summary citing exact NDVI values",
+  "summary": "2-3 sentence summary citing NDVI, NDWI, NDRE values and zone breakdown",
+  "ndre_warning": "specific nitrogen/chlorophyll advice if NDRE < 0.28, otherwise null",
   "alerts": [
     { "zone": "description", "severity": "low|medium|high", "message": "specific actionable advice" }
   ],
-  "recommendations": ["specific action items"]
+  "recommendations": ["specific action items ordered by priority"]
 }`
 
   const result = await model.generateContent(prompt)
