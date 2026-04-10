@@ -290,12 +290,8 @@ function buildIndexExpression(coordinates, bands, dateEnd) {
   };
 }
 
-/**
- * Build a GEE expression payload for EVI (Enhanced Vegetation Index).
- * EVI = 2.5 * (NIR - RED) / (NIR + 6*RED - 7.5*BLUE + 1)
- * Uses Sentinel-2 bands: NIR=B8, RED=B4, BLUE=B2 (scaled by /10000 for SR)
- */
-function buildEviExpression(coordinates, dateEnd) {
+/* EVI builder — unused (only NDVI/NDWI/NDRE active)
+function _buildEviExpression(coordinates, dateEnd) {
   const endStr = dateEnd instanceof Date
     ? dateEnd.toISOString().split("T")[0]
     : dateEnd;
@@ -470,6 +466,7 @@ function buildEviExpression(coordinates, dateEnd) {
     },
   };
 }
+END OF EVI BLOCK */
 
 /**
  * Fetch a single index (NDVI / NDWI / NDRE) for a polygon using GEE REST API.
@@ -495,32 +492,6 @@ async function fetchIndex(client, projectId, coordinates, bands, dateEnd) {
 }
 
 /**
- * Fetch EVI for a polygon using the custom expression builder.
- * Returns the mean EVI value or null.
- */
-async function fetchEvi(client, projectId, coordinates, dateEnd) {
-  const baseUrl = `https://earthengine.googleapis.com/v1/projects/${projectId}/value:compute`;
-  const payload = buildEviExpression(coordinates, dateEnd);
-
-  try {
-    const response = await client.request({
-      url: baseUrl,
-      method: "POST",
-      data: payload,
-    });
-    const result = response.data?.result || {};
-    // EVI expression result band name is "constant" by default
-    const value = typeof result.constant === "number" ? result.constant
-      : typeof result.nd === "number" ? result.nd
-      : null;
-    return value;
-  } catch (err) {
-    console.warn("GEE EVI fetch failed:", err.message);
-    return null;
-  }
-}
-
-/**
  * Fetch NDVI, NDWI, and NDRE for a polygon in parallel.
  * Returns { ndvi, ndwi, ndre }.
  */
@@ -532,6 +503,8 @@ async function fetchThreeIndices(client, projectId, coordinates, dateEnd) {
   ]);
   return { ndvi, ndwi, ndre };
 }
+
+// ---------- (Heatmap rendering is done client-side via zone data) ----------
 
 // ---------- Zone Classification ----------
 
